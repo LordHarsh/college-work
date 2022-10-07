@@ -6,5 +6,5 @@ int main()
     int num;
     scanf("%d", &num);
     printf("Octal representation: %o\n", num);
-    printf("Hexa-decimal representation: %h\n", num);
+    printf("Hexa-decimal representation: %x\n", num);
 }
