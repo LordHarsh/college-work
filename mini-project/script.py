@@ -31,37 +31,44 @@ def search(db):
     else:
         print_data(db, l)
 
-
 def add_stock(db):
     """ This method takes user input to adds items accordingly """
     print("\nITEMS CURRENTLY IN DATABASE")
     data_list = db.execute("select * from database")
     print_data(db, data_list)
     while True:
-        user_input = input("\nENTER 1 TO ADD ITEM ALREADY IN LIST\nENTER 2 TO ADD NEW ITEM\nENTER 3 TO SEARCH\nENTER 0 TO GO BACK\n")
+        user_input = input("\nENTER 1 TO ADD ITEM ALREADY IN LIST\nENTER 2 TO ADD NEW ITEMS\nENTER 3 TO SEARCH\nENTER 0 TO GO BACK\n")
         match user_input:
             case "1":
                 u2 = input("\nENTER ID OF THE ITEM TO ADD OR ENTER 0 TO GO BACK\n")
                 if u2 == '0':
                     continue
-                data_list = db.execute("SELECT * FROM database WHERE id=?", u2)
+                data_list = list(db.execute("SELECT * FROM database WHERE id=?", (u2,)))
                 if not data_list:
                     print("\nID NOT IN LIST\n")
                     continue
                 print_data(db, data_list)
-                quan = db.execute("SELECT quantity FROM database WHERE id=?", u2)
-                new_quan = list(quan)[0][0] + int(input("ENTER QUANTITY OF THIS ITEM TO ADD: "))
+                quan = list(db.execute("SELECT quantity FROM database WHERE id=?", (u2,)))[0][0]
+                item_price = list(db.execute("SELECT price FROM database WHERE id=?", (u2,)))[0][0]
+                user_quan = int(input("ENTER QUANTITY OF THIS ITEM TO ADD: "))
+                new_quan = quan + user_quan
                 db.execute("UPDATE database SET quantity=? WHERE id=?", (new_quan, u2))
-                print(f"{new_quan} ITEMS ADDED!")
+                price = user_quan * item_price
+                db.execute("INSERT INTO history (item_id, quantity, transaction_price, transaction_type) VALUES(?,?,?,?)", (u2, user_quan, price, "ADDED"))
+                print(f"{quan} ITEMS ADDED!\nPrice = \u20B9{price:.2f}")
                 db.commit()
             case "2":
                 item_name = input("ENTER NAME OF THE ITEM: ").title()
                 if item_name == '0':
                     continue
-                item_price = input("ENTER PRICE OF THE ITEM: ")
-                item_quantity = input("ENTER QUANTITY OF THE ITEM: ")
+                item_price = int(input("ENTER PRICE OF THE ITEM: "))
+                item_quantity = int(input("ENTER QUANTITY OF THE ITEM: "))
                 db.execute("INSERT INTO database (name, quantity, price) VALUES(?, ?, ?)", (item_name, item_quantity, item_price))
-                print(f"{item_quantity} ITEMS ADDED!")
+                price = item_price * item_quantity
+                item_id = list(db.execute("SELECT id FROM database WHERE name=?", (item_name,)))[0][0]
+                
+                db.execute("INSERT INTO history (item_id, quantity, transaction_price, transaction_type) VALUES(?,?,?,?)", (item_id, item_quantity, price, "ADDED"))
+                print(f"{item_quantity} ITEMS ADDED!\nPrice = \u20B9{price:.2f}")
                 db.commit()
             case "3":
                 search(db)
@@ -71,14 +78,13 @@ def add_stock(db):
             case _:
                 print("WRONG INPUT\n")
 
-
 def sell_stock(db):
     """ This method takes user input to sell items accordingly """
     print("\nITEMS CURRENTLY IN DATABASE")
     data_list = db.execute("select * from database")
     print_data(db, data_list)
     while True:
-        user_input = input("\nENTER 1 TO VIEW DATABASE\nENTER 2 TO SELL ITEMD\nENTER 3 TO SEARCH\nENTER 0 TO GO BACK\n")
+        user_input = input("\nENTER 1 TO VIEW DATABASE\nENTER 2 TO SELL ITEMS\nENTER 3 TO SEARCH\nENTER 0 TO GO BACK\n")
         match user_input:
             case "1":
                 print("\nITEMS CURRENTLY IN DATABASE")
@@ -88,13 +94,22 @@ def sell_stock(db):
                 u2 = input("\nENTER ID OF THE ITEM TO ADD OR ENTER 0 TO GO BACK\n")
                 if u2 == '0':
                     continue
-                data_list = db.execute("SELECT * FROM database WHERE id=?", u2)
+                data_list = list(db.execute("SELECT * FROM database WHERE id=?", (u2,)))
                 if not data_list:
                     print("\nID NOT IN LIST\n")
                     continue
                 print_data(db, data_list)
-                quan = db.execute("SELECT quantity FROM database WHERE id=?", u2)
-                
+                avail_quan = list(db.execute("SELECT quantity FROM database WHERE id=?", (u2,)))[0][0]
+                sell_quan = int(input("ENTER QUATITY OF THIS ITEM TO SELL: "))
+                if sell_quan > avail_quan:
+                    print(f"ONLY {avail_quan} ARE AVAILABLE IN STOCK.")
+                    continue
+                db.execute("UPDATE database SET quantity=? WHERE id=?", ((avail_quan-sell_quan), u2))
+                price = list(db.execute("SELECT price FROM database WHERE id=?", (u2,)))[0][0]
+                bill = sell_quan * price
+                db.execute("INSERT INTO history (item_id, quantity, transaction_price, transaction_type) VALUES(?,?,?,?)", (u2, sell_quan, bill, "SOLD"))
+                print(f"\n{sell_quan} ITEMS SOLD\nBILL = \u20B9{bill:.2f}")
+                db.commit()
             case "3":
                 search(db)
             case "0":
@@ -103,7 +118,28 @@ def sell_stock(db):
             case _:
                 print("WRONG INPUT\n")
 
-
+def history(db):
+    data_list = list(db.execute("SELECT history.id, history.item_id, name, transaction_price, time, transaction_type FROM history LEFT JOIN database ON history.item_id = database.id"))
+    data = {
+        "Id" : [],
+        "Item Id" : [],
+        "Item Name" : [],
+        "Transaction Price" : [],
+        "Time" : [],
+        "Transaction Type" : []
+    }
+    for i in data_list:
+        data['Id'].append(i[0])
+        data['Item Id'].append(i[1])
+        data['Item Name'].append(i[2])
+        data['Transaction Price'].append(i[3])
+        data["Time"].append(i[4])
+        data['Transaction Type'].append(i[5])
+    
+    df = pd.DataFrame(data)
+    df = df.set_index("Id")
+    df['Transaction Price'] = df['Transaction Price'].apply(lambda x: "\u20B9{:.2f}".format(x))
+    print(df)
 
 
 def get_db():
@@ -120,14 +156,15 @@ def main ():
     ''' main program '''
     db = get_db()
     db.execute("CREATE TABLE IF NOT EXISTS database (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, quantity NUMERIC NOT NULL, price NUMERIC NOT NULL)")
-    db.execute("CREATE TABLE IF NOT EXISTS add_history (id INTEGER AUTO_INCREMENT NOT NULL PRIMARY KEY, item_id INTEGER NOT NULL, quantity NUMERIC NOT NULL, price NUMERIC NOT NULL)")
-    db.execute("CREATE TABLE IF NOT EXISTS sold_history (id INTEGER AUTO_INCREMENT NOT NULL PRIMARY KEY, item_id INTEGER NOT NULL, quantity NUMERIC NOT NULL, price NUMERIC NOT NULL)")
+    db.execute("CREATE TABLE IF NOT EXISTS history (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, item_name TEXT,item_id INTEGER NOT NULL, quantity NUMERIC NOT NULL, transaction_price NUMERIC NOT NULL, time DATETIME default CURRENT_TIMESTAMP, transaction_type TEXT NOT NULL, FOREIGN KEY(item_id, item_name) REFERENCES database(id, name))")
     while True:
-        user_input = input("\nENTER 1 to add stock,\nENTER 2 to sell stock OR\nENTER 0 to exit\n")
+        user_input = input("\nENTER 1 TO ADD STOCK,\nENTER 2 TO SELL STOCK\nENTER 3 TO VIEW HISTORY\nENTER TO ENTER 0 TO EXIT\n")
         if user_input == "1":
             add_stock(db)
         elif user_input == "2":
             sell_stock(db)
+        elif user_input == "3":
+            history(db)
         elif user_input == "0":
             break
         else:
