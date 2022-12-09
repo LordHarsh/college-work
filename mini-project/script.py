@@ -23,20 +23,18 @@ def print_data(db, data_list):
     print(df)
 
 def search(db):
-    item_name = input("Enter name of the item to search: ")
+    item_name = input("ENTER NAME OF THE ITEM TO SEARCH OR\nJUST PRESS ENTER KEY TO VIEW WHOLE DATABASE: ")
     data = db.execute("SELECT * FROM database WHERE name LIKE ?", ("%"+item_name+"%",))  
-    print(item_name)
-    print(list(data))
-    if len(list(data)) == 0:        
+    l = list(data)
+    if len(l) == 0:        
         print("Nothing matches the given name")
     else:
-        len(list(data))
-        print_data(db, data)
+        print_data(db, l)
 
 
 def add_stock(db):
-    """ This method takes user input then adds items accordingly """
-    print("\nItems currently in database")
+    """ This method takes user input to adds items accordingly """
+    print("\nITEMS CURRENTLY IN DATABASE")
     data_list = db.execute("select * from database")
     print_data(db, data_list)
     while True:
@@ -52,29 +50,60 @@ def add_stock(db):
                     continue
                 print_data(db, data_list)
                 quan = db.execute("SELECT quantity FROM database WHERE id=?", u2)
-                new_quan = list(quan)[0][0] + int(input("Enter the quantity of this item to add: "))
+                new_quan = list(quan)[0][0] + int(input("ENTER QUANTITY OF THIS ITEM TO ADD: "))
                 db.execute("UPDATE database SET quantity=? WHERE id=?", (new_quan, u2))
-                print(f"{new_quan} items added!")
+                print(f"{new_quan} ITEMS ADDED!")
                 db.commit()
             case "2":
-                item_name = input("Enter name of the item: ").title()
-                item_price = input("Enter price of the item: ")
-                item_quantity = input("Enter quantity of the item: ")
+                item_name = input("ENTER NAME OF THE ITEM: ").title()
+                if item_name == '0':
+                    continue
+                item_price = input("ENTER PRICE OF THE ITEM: ")
+                item_quantity = input("ENTER QUANTITY OF THE ITEM: ")
                 db.execute("INSERT INTO database (name, quantity, price) VALUES(?, ?, ?)", (item_name, item_quantity, item_price))
-                print(f"{item_quantity} items added!")
+                print(f"{item_quantity} ITEMS ADDED!")
                 db.commit()
             case "3":
                 search(db)
             case "0":
-                print("Returning.....\n")
+                print("RETURNING.....\n")
                 return
             case _:
-                print("Wrong Input")
+                print("WRONG INPUT\n")
 
 
 def sell_stock(db):
+    """ This method takes user input to sell items accordingly """
+    print("\nITEMS CURRENTLY IN DATABASE")
+    data_list = db.execute("select * from database")
+    print_data(db, data_list)
+    while True:
+        user_input = input("\nENTER 1 TO VIEW DATABASE\nENTER 2 TO SELL ITEMD\nENTER 3 TO SEARCH\nENTER 0 TO GO BACK\n")
+        match user_input:
+            case "1":
+                print("\nITEMS CURRENTLY IN DATABASE")
+                data_list = db.execute("SELECT * FROM database")
+                print_data(db, data_list)
+            case "2":
+                u2 = input("\nENTER ID OF THE ITEM TO ADD OR ENTER 0 TO GO BACK\n")
+                if u2 == '0':
+                    continue
+                data_list = db.execute("SELECT * FROM database WHERE id=?", u2)
+                if not data_list:
+                    print("\nID NOT IN LIST\n")
+                    continue
+                print_data(db, data_list)
+                quan = db.execute("SELECT quantity FROM database WHERE id=?", u2)
+                
+            case "3":
+                search(db)
+            case "0":
+                print("RETURNING.....\n")
+                return
+            case _:
+                print("WRONG INPUT\n")
 
-    pass
+
 
 
 def get_db():
@@ -99,9 +128,8 @@ def main ():
             add_stock(db)
         elif user_input == "2":
             sell_stock(db)
-            break
         elif user_input == "0":
-            break
+            c
         else:
             print("Wrong Input\n")
 if __name__ == "__main__":
