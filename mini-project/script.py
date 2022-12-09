@@ -129,7 +129,7 @@ def main ():
         elif user_input == "2":
             sell_stock(db)
         elif user_input == "0":
-            c
+            break
         else:
             print("Wrong Input\n")
 if __name__ == "__main__":
