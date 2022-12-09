@@ -49,9 +49,9 @@ def add_stock(db):
                     continue
                 print_data(db, data_list)
                 quan = list(db.execute("SELECT quantity FROM database WHERE id=?", (u2,)))[0][0]
-                item_price = list(db.execute("SELECT price FROM database WHERE id=?", (u2,)))[0][0]
                 user_quan = int(input("ENTER QUANTITY OF THIS ITEM TO ADD: "))
                 new_quan = quan + user_quan
+                item_price = float(input("ENTER THE WHOLE SALE PRICE OF THE ITEM: "))
                 db.execute("UPDATE database SET quantity=? WHERE id=?", (new_quan, u2))
                 price = user_quan * item_price
                 db.execute("INSERT INTO history (item_id, quantity, transaction_price, transaction_type) VALUES(?,?,?,?)", (u2, user_quan, price, "ADDED"))
@@ -61,10 +61,11 @@ def add_stock(db):
                 item_name = input("ENTER NAME OF THE ITEM: ").title()
                 if item_name == '0':
                     continue
-                item_price = int(input("ENTER PRICE OF THE ITEM: "))
+                item_price = float(input("ENTER PRICE OF THE ITEM: "))
                 item_quantity = int(input("ENTER QUANTITY OF THE ITEM: "))
+                ws_price = float(input("ENTER THE WHOLE SALE PRICE OF THE ITEM: "))
                 db.execute("INSERT INTO database (name, quantity, price) VALUES(?, ?, ?)", (item_name, item_quantity, item_price))
-                price = item_price * item_quantity
+                price = ws_price * item_quantity
                 item_id = list(db.execute("SELECT id FROM database WHERE name=?", (item_name,)))[0][0]
                 
                 db.execute("INSERT INTO history (item_id, quantity, transaction_price, transaction_type) VALUES(?,?,?,?)", (item_id, item_quantity, price, "ADDED"))
@@ -119,11 +120,12 @@ def sell_stock(db):
                 print("WRONG INPUT\n")
 
 def history(db):
-    data_list = list(db.execute("SELECT history.id, history.item_id, name, transaction_price, time, transaction_type FROM history LEFT JOIN database ON history.item_id = database.id"))
+    data_list = list(db.execute("SELECT history.id, history.item_id, name, history.quantity, transaction_price, time, transaction_type FROM history LEFT JOIN database ON history.item_id = database.id"))
     data = {
         "Id" : [],
         "Item Id" : [],
         "Item Name" : [],
+        "Quantity" : [],
         "Transaction Price" : [],
         "Time" : [],
         "Transaction Type" : []
@@ -132,9 +134,10 @@ def history(db):
         data['Id'].append(i[0])
         data['Item Id'].append(i[1])
         data['Item Name'].append(i[2])
-        data['Transaction Price'].append(i[3])
-        data["Time"].append(i[4])
-        data['Transaction Type'].append(i[5])
+        data['Quantity'].append(i[3])
+        data['Transaction Price'].append(i[4])
+        data["Time"].append(i[5])
+        data['Transaction Type'].append(i[6])
     
     df = pd.DataFrame(data)
     df = df.set_index("Id")
@@ -156,7 +159,7 @@ def main ():
     ''' main program '''
     db = get_db()
     db.execute("CREATE TABLE IF NOT EXISTS database (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, quantity NUMERIC NOT NULL, price NUMERIC NOT NULL)")
-    db.execute("CREATE TABLE IF NOT EXISTS history (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, item_name TEXT,item_id INTEGER NOT NULL, quantity NUMERIC NOT NULL, transaction_price NUMERIC NOT NULL, time DATETIME default CURRENT_TIMESTAMP, transaction_type TEXT NOT NULL, FOREIGN KEY(item_id, item_name) REFERENCES database(id, name))")
+    db.execute("CREATE TABLE IF NOT EXISTS history (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, item_name TEXT, item_id INTEGER NOT NULL, quantity NUMERIC NOT NULL, transaction_price NUMERIC NOT NULL, time DATETIME default CURRENT_TIMESTAMP, transaction_type TEXT NOT NULL, FOREIGN KEY(item_id, item_name) REFERENCES database(id, name))")
     while True:
         user_input = input("\nENTER 1 TO ADD STOCK,\nENTER 2 TO SELL STOCK\nENTER 3 TO VIEW HISTORY\nENTER TO ENTER 0 TO EXIT\n")
         if user_input == "1":
