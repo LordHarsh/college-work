@@ -169,6 +169,7 @@ def main ():
         elif user_input == "3":
             history(db)
         elif user_input == "0":
+            print("------THANK YOU------")
             break
         else:
             print("Wrong Input\n")
