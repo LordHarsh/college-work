@@ -55,7 +55,7 @@ def add_stock(db):
                 db.execute("UPDATE database SET quantity=? WHERE id=?", (new_quan, u2))
                 price = user_quan * item_price
                 db.execute("INSERT INTO history (item_id, quantity, transaction_price, transaction_type) VALUES(?,?,?,?)", (u2, user_quan, price, "ADDED"))
-                print(f"{quan} ITEMS ADDED!\nPrice = \u20B9{price:.2f}")
+                print(f"{user_quan} ITEMS ADDED!\nPrice = \u20B9{price:.2f}")
                 db.commit()
             case "2":
                 item_name = input("ENTER NAME OF THE ITEM: ").title()
