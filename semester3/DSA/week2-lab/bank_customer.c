@@ -36,6 +36,5 @@ int main(){
         printf("Address is: %s\n\n",ptr->address);
         ptr++;
     }
-    free(ptr);
     return 0;
 }
