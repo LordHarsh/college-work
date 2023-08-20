@@ -4,12 +4,13 @@ import java.util.Scanner;
 public class Series {
     public static void main(String[] agrs) {
         Scanner sc = new Scanner(System.in);
+        System.out.print("Enter a number: ");
         int n = sc.nextInt();
-        int sum = 0;
+        double sum = 0;
         for (int i = 1; i <= n; i++) {
             sum += i;
         }
-        System.out.printf("The sum of the series 1 + 2 + 3 + ... + %d is %d\n", n, sum);
+        System.out.printf("The sum of the series 1 + 2 + 3 + ... + %d is %f\n", n, sum);
         sum = 0;
         for (int i = 1; i <= n; i++) {
             sum += 1.0/i;
@@ -19,6 +20,6 @@ public class Series {
         for (int i = 1; i <= n; i++) {
             sum += i*i;
         }
-        System.out.printf("The sum of the series 1^2 + 2^2 + 3^2 + ... + %d^2 is %d\n", n, sum);
+        System.out.printf("The sum of the series 1^2 + 2^2 + 3^2 + ... + %d^2 is %f\n", n, sum);
     }
 }
