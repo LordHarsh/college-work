@@ -15,7 +15,7 @@ public class StringDetail {
                 upper++;
             } else if (ch >= 97 && ch <= 122) {
                 lower++;
-            } else if (ch >= 48 && ch <= 57) {
+            } else if (ch >= 48 && ch <= 57) { 
                 digit++;
             } else {
                 special++;
