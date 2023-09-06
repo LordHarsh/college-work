@@ -22,6 +22,7 @@ int main() {
         printf("Enter student percentage: ");
         scanf("%f", &record[i].percentage);
     }
+    
     for(i=0; i<n; i++){
         printf("Records of STUDENT : %d \n", i+1);
         printf("Id is: %d \n", record[i].id);

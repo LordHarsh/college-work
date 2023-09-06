@@ -8,7 +8,6 @@ struct customer {
     float balance;
     char address[100];
 };
-
 int main(){
     int n;
     printf("Enter number of customers: ");
